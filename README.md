@@ -1,5 +1,8 @@
 # kubectl-exec:
-kubectl-exec is a shell script that uses nsenter http://man7.org/linux/man-pages/man1/nsenter.1.html for getting a shell into your kuberntes nodes.
+kubectl-exec is a shell script that allows you to get into a node shell.
+
+#How it works ?
+It works by creating a pod in the node you specified and using nsenter http://man7.org/linux/man-pages/man1/nsenter.1.html for getting a shell into your kuberntes nodes.
 
 
 # Installation:
@@ -10,7 +13,6 @@ sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 ```
 
 # Usage:
-
 ```
 kubectl-exec NODE
 ```
