@@ -9,9 +9,11 @@ The created pod is from alpine official image which is ~2.6 mb in size, once you
 
 # Installation:
 ```
-wget https://github.com/mohatb/kubectl-exec/raw/master/kubectl-exec
-chmod +x ./kubectl-exec
-sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
+$ wget https://github.com/mohatb/kubectl-exec/raw/master/kubectl-exec
+
+$ chmod +x ./kubectl-exec
+
+$ sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 ```
 
 # Usage:
