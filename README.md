@@ -17,10 +17,10 @@ sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 # Usage:
 ```
 Interactive:
-kubectl-exec
+$ kubectl-exec
 
 Non-Interactive
-kubectl-exec NODE
+$ kubectl-exec NODE
 ```
 
 # inspired by:
