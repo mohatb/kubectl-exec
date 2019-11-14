@@ -1,0 +1,43 @@
+#!/bin/sh
+
+#Check user input.
+if [ -z "$1" ]; then
+  kubectl get nodes
+  read -p "Enter the node name: " NODENAME
+fi
+
+NODE="$1"
+NODE=$NODENAME
+IMAGE="alpine"
+POD="$NODENAME-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
+NAMESPACE=""
+
+# Check the node existance
+kubectl get node "$NODE" >/dev/null || exit 1
+
+#nsenter JSON overrrides
+OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+    "nodeName": "$NODE",
+    "hostPID": true,
+    "containers": [
+      {
+        "securityContext": {
+          "privileged": true
+        },
+        "image": "$IMAGE",
+        "name": "nsenter",
+        "stdin": true,
+        "stdinOnce": true,
+        "tty": true,
+        "command": [ "nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "bash", "-l" ]
+      }
+    ]
+  }
+}
+EOT
+)"
+
+echo "creating pod \"$POD\" on node \"$NODE\""
+kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
