@@ -10,7 +10,6 @@ NODE="$1"
 NODE=$NODENAME
 IMAGE="alpine"
 POD="$NODENAME-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
-NAMESPACE=""
 
 # Check the node existance
 kubectl get node "$NODE" >/dev/null || exit 1
