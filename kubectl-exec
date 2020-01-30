@@ -2,20 +2,21 @@
 
 #Check user input.
 if [ -z "$1" ]; then
-  kubectl get nodes
-  read -p "Enter the node name: " NODENAME
-fi
+          kubectl get nodes
+            read -p "Enter the node name: " NODENAME
+            NODE=$NODENAME
+    else
+        NODE=$1
+    fi
 
-NODE="$1"
-NODE=$NODENAME
-IMAGE="alpine"
-POD="$NODENAME-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
+    IMAGE="alpine"
+    POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
 
-# Check the node existance
-kubectl get node "$NODE" >/dev/null || exit 1
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
 
-#nsenter JSON overrrides
-OVERRIDES="$(cat <<EOT
+    #nsenter JSON overrrides
+    OVERRIDES="$(cat <<EOT
 {
   "spec": {
     "nodeName": "$NODE",
