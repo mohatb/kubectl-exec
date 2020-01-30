@@ -7,7 +7,7 @@ if [ -z "$1" ]; then
 fi
 
 NODE="$1"
-NODENAME=$NODE
+NODE=$NODENAME
 IMAGE="alpine"
 POD="$NODENAME-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
 
