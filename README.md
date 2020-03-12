@@ -7,11 +7,13 @@ It works by creating a pod (with a priviledged container) in the node you specif
 
 The created pod is from alpine official image which is ~2.6 mb in size, once you exit the shell, the pod will be deleted.
 
-# For windows Nodes:
+# For Windows Nodes:
 
-It is required to have Openssh on windows, with credentials user/pass. SSH keys are currently not supported but will be added soon/
+It is required to have OpenSSH on windows, with credentials user/pass. SSH keys are currently not supported but will be added soon/
 
 https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+
+Note: AKS nodes have OpenSSH installed by default.
 
 
 # Installation:
