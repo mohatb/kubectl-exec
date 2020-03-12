@@ -93,7 +93,7 @@ kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 
 #Evaluate if windows node.
 NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
 
-if [ $NODEOS == "windows" ]
+if [ $NODEOS = "windows" ]
 then
     WINDOWSNODES
 else
