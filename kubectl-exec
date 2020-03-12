@@ -52,7 +52,7 @@ kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 
 WINDOWSNODES () {
 
 echo "SSH into windows VM"
-read -p "Enter the node ssh user: " WINDOWSSSHUSER
+read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
     IMAGE="alpine"
     POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
 
