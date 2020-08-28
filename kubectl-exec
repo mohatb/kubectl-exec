@@ -30,7 +30,8 @@ if [ -z "$1" ]; then
         for i in "${!nodenumber[@]}"; do
           printf "$i ${nodenumber[i]} \n"
         done
-          
+        
+        echo ""
         read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenumber[NODE_INDEX]}
 
