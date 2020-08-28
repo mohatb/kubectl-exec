@@ -1,10 +1,38 @@
-#!/bin/sh
+#!/bin/bash
+
+#Usage message
+usage()
+{
+        echo 'Interactive:'
+        echo '$ kubectl-exec'
+        echo " "
+        echo 'Non-Interactive'
+        echo '$ kubectl-exec NODE'
+        echo " "
+        echo "Example: kubectl-exec minikube"
+        echo " "
+        echo "If you are running as a script"
+        echo "./kubectl-exec"
+        exit 0
+}
+
+if [ "$1" = "-h" ]
+then
+        usage
+        exit 1
+fi
 
 #Check user input.
 if [ -z "$1" ]; then
-          kubectl get nodes
-            read -p "Enter the node name: " NODENAME
-            NODE=$NODENAME
+        
+        mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
+
+        for i in "${!nodenumber[@]}"; do
+          printf "$i ${nodenumber[i]} \n"
+        done
+          
+        read -p "Enter the node number: " NODE_INDEX
+        NODE=${nodenumber[NODE_INDEX]}
 
     else
         NODE=$1
@@ -58,7 +86,7 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
 
     # Check the node existance and IP
     kubectl get nodes "$NODE" -o wide >/dev/null || exit 1
-    WINNODEIP=$(kubectl get node aksnpwin000000 --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+    WINNODEIP=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
 
     #nsenter JSON overrrides
     OVERRIDES="$(cat <<EOT
