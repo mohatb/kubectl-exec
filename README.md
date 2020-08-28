@@ -7,6 +7,8 @@ It works by creating a pod (with a priviledged container) in the node you specif
 
 The created pod is from alpine official image which is ~2.6 mb in size, once you exit the shell, the pod will be deleted.
 
+[![asciicast](https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh.svg)](https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh)
+
 # For Windows Nodes:
 
 It is required to have OpenSSH on windows, with credentials user/pass. SSH keys are currently not supported but will be added soon/
@@ -33,5 +35,3 @@ $ kubectl-exec
 Non-Interactive
 $ kubectl-exec NODE
 ```
-
-<script id="asciicast-1g9bg0UTPRdXrxNLbMgQ4XShh" src="https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh.js" async></script>
