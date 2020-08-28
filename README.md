@@ -33,3 +33,4 @@ $ kubectl-exec
 Non-Interactive
 $ kubectl-exec NODE
 ```
+[![asciicast](https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh.svg)](https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh)
