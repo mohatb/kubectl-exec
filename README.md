@@ -33,4 +33,5 @@ $ kubectl-exec
 Non-Interactive
 $ kubectl-exec NODE
 ```
-<a href="https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh" target="_blank"><img src="https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh.svg" /></a>
+
+<script id="asciicast-1g9bg0UTPRdXrxNLbMgQ4XShh" src="https://asciinema.org/a/1g9bg0UTPRdXrxNLbMgQ4XShh.js" async></script>
