@@ -1,5 +1,24 @@
 #!/bin/bash
 
+#Check kubectl client exists
+if ! command -v kubectl &> /dev/null
+then
+    echo "Kubectl client could not be found. Please install Kubectl client before running kubectl-exec.\n REF: https://kubernetes.io/docs/tasks/tools/"
+    exit 1
+fi
+
+#Check client major/minor versions
+kubectl_major_version=$(kubectl version --client -o yaml | grep -i "major" | awk '{ print $2 }' | sed 's/"//g')
+kubectl_minor_version=$(kubectl version --client -o yaml | grep -i "minor" | awk '{ print $2 }' | sed 's/"//g')
+
+if [[ $kubectl_major_version -gt 1 || $kubectl_major_version -eq 1 && $kubectl_minor_version -ge 20 ]]
+then
+        use_generator=false
+else
+        use_generator=true
+fi
+echo $use_generator
+
 #Usage message
 usage()
 {
@@ -72,7 +91,12 @@ EOT
 )"
 
 echo "creating pod \"$POD\" on node \"$NODE\""
-kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
+if [ $use_generator -eq true]
+then
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
+else
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" -ti "$POD"
+fi
 }
 
 
@@ -115,7 +139,14 @@ EOT
 )"
 
 echo "creating pod \"$POD\" for windows ssh"
-kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
+
+if [ $use_generator -eq true]
+then
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
+else
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" -ti "$POD"
+fi
+
 }
 
 #Evaluate if windows node.
