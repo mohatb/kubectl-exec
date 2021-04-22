@@ -7,8 +7,6 @@ then
     exit 1
 fi
 
-
-
 #Check client major/minor versions
 kubectl_major_version=$(kubectl version --client -o yaml | grep -i "major" | awk '{ print $2 }' | sed 's/"//g')
 kubectl_minor_version=$(kubectl version --client -o yaml | grep -i "minor" | awk '{ print $2 }' | sed 's/"//g')
@@ -106,7 +104,6 @@ else
 fi
 }
 
-
 #windows function to ssh to windows nodes
 WINDOWSNODES () {
 
@@ -147,7 +144,7 @@ EOT
 
 echo "creating pod \"$POD\" for windows ssh"
 
-if [ $use_generator -eq true]
+if [ $use_generator = true]
 then
         kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
 else
