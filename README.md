@@ -29,13 +29,14 @@ sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 
 # Usage:
 ```
+Interavtive
 $ kubectl-exec
  
 Non-Interactive
 $ kubectl-exec NODE
  
 You can mount node root volume to pod with -mount
-./kubectl-exec -mount
+$ kubectl-exec -mount
  
 Examples:
 kubectl-exec
