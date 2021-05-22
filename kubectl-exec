@@ -1,47 +1,251 @@
-# kubectl-exec:
-kubectl-exec stands for kubectl Kubectl-Windows-Linux-Shell, it is an interactive shell script and also a kubectl plugin that allows you to access a kubernetes windows or linux nodes shell.
+#!/bin/bash
 
-# How it works ?
+#Check kubectl client exists
+if ! command -v kubectl &> /dev/null
+then
+    printf "Kubectl client could not be found. Please install Kubectl client before running kubectl-exec.\nRefer to: https://kubernetes.io/docs/tasks/tools/\n\n"
+    exit 1
+fi
 
-For Linux Nodes:
+#Check client major/minor versions
+kubectl_major_version=$(kubectl version --client -o yaml | grep -i "major" | awk '{ print $2 }' | sed 's/"//g')
+kubectl_minor_version=$(kubectl version --client -o yaml | grep -i "minor" | awk '{ print $2 }' | sed 's/"//g')
 
-It works by creating a pod (with a priviledged container) in the node you specified and using nsenter http://man7.org/linux/man-pages/man1/nsenter.1.html for getting a shell into your linux nodes.
+if [[ $kubectl_major_version -gt 1 ]] || [[ $kubectl_major_version -eq 1 && $kubectl_minor_version -ge 18 ]]
+then
+        use_generator=false
+        echo "Kuberetes client version is $kubectl_major_version.$kubectl_minor_version. Generator will not be used since it is deprecated."
+elif [[ $kubectl_major_version -eq 1 && $kubectl_minor_version -lt 18 ]]
+then
+        use_generator=true
+        echo "Kuberetes client version is $kubectl_major_version.$kubectl_minor_version. Generator will be used."
+else
+        echo "Invalid kubectl version, exiting."
+        exit 1
+fi
+
+#Usage message
+usage()
+{
+        echo 'Interactive:'
+        echo '$ kubectl-exec'
+        echo " "
+        echo 'Non-Interactive'
+        echo '$ kubectl-exec NODE'
+        echo " "
+        echo "You can mount node root volume to pod with -mount"
+        echo "./kubectl-exec -mount"
+        echo " "
+        echo "Examples:"
+        echo "kubectl-exec"
+        echo "kubectl-exec minikube"
+        echo "kubectl-exec -mount"
+        echo "kubectl-exec -mount node1"
+        echo " "
+        exit 0
+}
+
+#windows function to ssh to linux nodes
+LINUXNODES () {
+
+    IMAGE="alpine"
+    POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
+
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
+
+    #nsenter JSON overrrides
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+    "nodeName": "$NODE",
+    "hostPID": true,
+    "containers": [
+      {
+        "securityContext": {
+          "privileged": true
+        },
+        "image": "$IMAGE",
+        "name": "nsenter",
+        "stdin": true,
+        "stdinOnce": true,
+        "tty": true,
+        "command": [ "nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "bash", "-l" ]
+      }
+    ]
+  }
+}
+EOT
+)"
+
+echo "creating pod \"$POD\" on node \"$NODE\""
+if [ $use_generator = true ]
+then
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
+else
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" -ti "$POD"
+fi
+}
+
+#windows function to ssh to windows nodes
+WINDOWSNODES () {
+
+echo "SSH into windows VM"
+read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
+    IMAGE="alpine"
+    POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
+
+    # Check the node existance and IP
+    kubectl get nodes "$NODE" -o wide >/dev/null || exit 1
+    WINNODEIP=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+
+    #nsenter JSON overrrides
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+    "hostPID": true,
+    "nodeSelector": {
+      "kubernetes.io/os": "linux"
+      },
+    "containers": [
+      {
+        "securityContext": {
+          "privileged": true
+        },
+        "image": "$IMAGE",
+        "name": "nsenter",
+        "stdin": true,
+        "stdinOnce": true,
+        "tty": true,
+        "command": [ "nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "ssh", "$WINDOWSSSHUSER@$WINNODEIP" ]
+      }
+    ]
+  }
+}
+EOT
+)"
+
+echo "creating pod \"$POD\" for windows ssh"
+
+if [ $use_generator = true ]
+then
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 -ti "$POD"
+else
+        kubectl run --rm --image $IMAGE --overrides="$OVERRIDES" -ti "$POD"
+fi
+
+}
+
+#function to mount linux root file system to pod
+LINUXHOSTMOUNT () {
+
+    IMAGE="alpine"
+    POD="$NODE-hostpath-mount"
+
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
+
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+    "hostPID": true,
+    "nodeSelector": {
+      "kubernetes.io/os": "linux"
+      },
+    "containers": [
+      {
+        "securityContext": {
+          "privileged": true
+        },
+        "image": "$IMAGE",
+        "volumeMounts": [
+            {
+              "mountPath": "/host",
+              "name": "hostrootvolume",
+              "readOnly": false
+            }
+          ],
+        "name": "hostmount",
+        "stdin": true,
+        "stdinOnce": true,
+        "tty": true
+      }
+    ],
+    "volumes": [
+      {
+        "name": "hostrootvolume",
+        "hostPath": {
+          "path": "/",
+          "name": "hostrootvolume"
+        }
+      }
+    ]
+  }
+}
+EOT
+)"
+
+echo "creating pod \"$POD\" on node \"$NODE\""
+if [ $use_generator = true ]
+then
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 "$POD"
+else
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" "$POD"
+fi
+
+}
 
 
-For Windows Nodes:
+#check if user is looking for focumentation with -h
+if [ "$1" = "-h" ]
+then
+        usage
+        exit 1
+fi
 
-It is required to have OpenSSH on windows, with user/pass credentials. SSH keys are currently not supported but will be added soon.
+#Check user input for shell access
+if [ -z "$1" ]; then
+        
+        mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
 
-To Install OpenSSH on your windows nodes, please follow the below:
-https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_install_firstuse
+        for i in "${!nodenumber[@]}"; do
+          printf "$i ${nodenumber[i]} \n"
+        done
+        
+        read -p "Enter the node number: " NODE_INDEX
+        NODE=${nodenumber[NODE_INDEX]}
 
-Since windows images are large in size, kubectl-exec will create a linux image on a linux node and establish an SSH connection to the windows node.
+    else
+        NODE=$1
+    fi
 
-Note: AKS nodes have OpenSSH installed by default.
+#Statement to check if user is looking to mount root file system in linux nodes to the pod.
+if [ "$1" = "-mount" ] && [ -n "$2" ]; then
+#Check if the user provided node number
+       NODE="$2"
+       LINUXHOSTMOUNT
+       exit 1
 
+  elif [ "$1" = "-mount" ] && [ -z "$2" ]; then
+#If the user did not provide a node number, use interactive to get it.
+		mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
 
-# Installation:
-```
-wget https://raw.githubusercontent.com/mohatb/kubectl-exec/master/kubectl-exec
+        for i in "${!nodenumber[@]}"; do
+          printf "$i ${nodenumber[i]} \n"
+        done
+        
+        read -p "Enter the node number: " NODE_INDEX
+        NODE=${nodenumber[NODE_INDEX]}
+        LINUXHOSTMOUNT
+        exit 1
+fi
 
-chmod +x ./kubectl-exec
+#Evaluate if windows node.
+NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
 
-sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
-```
-
-# Usage:
-```
-$ kubectl-exec
- 
-Non-Interactive
-$ kubectl-exec NODE
- 
-You can mount node root volume to pod with -mount
-./kubectl-exec -mount
- 
-Examples:
-kubectl-exec
-kubectl-exec minikube
-kubectl-exec -mount
-kubectl-exec -mount node1
-```
+if [ $NODEOS = "windows" ]
+then
+    WINDOWSNODES
+else
+    LINUXNODES
+fi
