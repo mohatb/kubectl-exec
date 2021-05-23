@@ -1,5 +1,5 @@
 # kubectl-exec:
-kubectl-exec is a shell script that allows you to get into a node shell.
+kubectl-exec is a shell script that allows you to access a node. it works on both Linux and windows with ssh enabled.
 
 # How it works ?
 
