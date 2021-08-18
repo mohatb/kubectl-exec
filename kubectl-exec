@@ -63,7 +63,10 @@ LINUXNODES () {
     "containers": [
       {
         "securityContext": {
-          "privileged": true
+          "privileged": true,
+          "capabilities": {
+               "add": [ "SYS_PTRACE" ]
+          }
         },
         "image": "$IMAGE",
         "name": "nsenter",
@@ -110,7 +113,10 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
     "containers": [
       {
         "securityContext": {
-          "privileged": true
+          "privileged": true,
+          "capabilities": {
+               "add": [ "SYS_PTRACE" ]
+          }
         },
         "image": "$IMAGE",
         "name": "nsenter",
@@ -155,7 +161,10 @@ LINUXHOSTMOUNT () {
     "containers": [
       {
         "securityContext": {
-          "privileged": true
+          "privileged": true,
+          "capabilities": {
+               "add": [ "SYS_PTRACE" ]
+          }
         },
         "image": "$IMAGE",
         "volumeMounts": [
