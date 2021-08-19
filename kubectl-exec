@@ -154,10 +154,8 @@ LINUXHOSTMOUNT () {
     OVERRIDES="$(cat <<EOT
 {
   "spec": {
+    "nodeName": "$NODE",
     "hostPID": true,
-    "nodeSelector": {
-      "kubernetes.io/os": "linux"
-      },
     "containers": [
       {
         "securityContext": {
@@ -167,26 +165,11 @@ LINUXHOSTMOUNT () {
           }
         },
         "image": "$IMAGE",
-        "volumeMounts": [
-            {
-              "mountPath": "/host",
-              "name": "hostrootvolume",
-              "readOnly": false
-            }
-          ],
-        "name": "hostmount",
+        "name": "nsenter",
         "stdin": true,
         "stdinOnce": true,
-        "tty": true
-      }
-    ],
-    "volumes": [
-      {
-        "name": "hostrootvolume",
-        "hostPath": {
-          "path": "/",
-          "name": "hostrootvolume"
-        }
+        "tty": true,
+        "command": [ "nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "bash", "-l" ]
       }
     ]
   }
@@ -194,7 +177,17 @@ LINUXHOSTMOUNT () {
 EOT
 )"
 
-echo "creating pod \"$POD\" on node \"$NODE\""
+echo "creating host pod \"$POD\" on node \"$NODE\""
+echo ""
+echo "You can copy data between your local machine and the node with the below examples:"
+echo ""
+echo "From Local -> Node:"
+echo "kubectl cp /etc/hostname default/$POD:/tmp/hostname"
+echo ""
+echo "From Node -> Local"
+echo "kubectl cp default/$POD:/etc/hostname /tmp/hostname"
+echo ""
+
 if [ $use_generator = true ]
 then
         kubectl run --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 "$POD"
@@ -205,7 +198,7 @@ fi
 }
 
 
-#check if user is looking for focumentation with -h
+#check if user is looking for documentation with -h
 if [ "$1" = "-h" ]
 then
         usage
