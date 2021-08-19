@@ -33,7 +33,7 @@ usage()
         echo 'Non-Interactive'
         echo '$ kubectl-exec NODE'
         echo " "
-        echo "You can mount node root volume to pod with -mount"
+        echo "Create a mount pod that can be used to transfer data between node and local"
         echo "./kubectl-exec -mount"
         echo " "
         echo "Examples:"
