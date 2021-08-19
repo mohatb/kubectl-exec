@@ -35,7 +35,7 @@ $ kubectl-exec
 Non-Interactive
 $ kubectl-exec NODE
  
-You can mount node root volume to pod with -mount
+You can create a non-interactive host pod that will not be deleted automatically. this is very helpful to transfer data between node and local machine.
 $ kubectl-exec -mount
  
 Examples:
