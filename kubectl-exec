@@ -49,7 +49,7 @@ usage()
 LINUXNODES () {
 
     IMAGE="alpine"
-    POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
+    POD="$NODE-exec-$(echo $RANDOM)"
 
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
