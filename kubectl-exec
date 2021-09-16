@@ -24,6 +24,9 @@ else
         exit 1
 fi
 
+#Reading list of capabilities that the user wants to add
+read -p "Enter container cabilities with \"\" seperated by commas (Leave blank for none):" capabilities
+
 #Usage message
 usage()
 {
@@ -65,7 +68,7 @@ LINUXNODES () {
         "securityContext": {
           "privileged": true,
           "capabilities": {
-               "add": [ "SYS_PTRACE" ]
+               "add": [ $capabilities ]
           }
         },
         "image": "$IMAGE",
@@ -115,7 +118,7 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
         "securityContext": {
           "privileged": true,
           "capabilities": {
-               "add": [ "SYS_PTRACE" ]
+               "add": [ $capabilities ]
           }
         },
         "image": "$IMAGE",
@@ -161,7 +164,7 @@ LINUXHOSTMOUNT () {
         "securityContext": {
           "privileged": true,
           "capabilities": {
-               "add": [ "SYS_PTRACE" ]
+               "add": [ $capabilities ]
           }
         },
         "image": "$IMAGE",
