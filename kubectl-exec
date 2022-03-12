@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #Check kubectl client exists
 if ! command -v kubectl &> /dev/null
@@ -245,7 +245,7 @@ fi
 #Evaluate if windows node.
 NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
 
-if [ $NODEOS = "windows" ]
+if [[ $NODEOS = "windows" ]]
 then
     WINDOWSNODES
 else
