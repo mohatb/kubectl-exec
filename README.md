@@ -1,5 +1,7 @@
 # kubectl-exec:
-kubectl-exec is a shell script that allows you to access a node. it works on both Linux and windows with ssh enabled.
+kubectl-exec is a bash script that allows you to access a node. it works on both Linux and windows with ssh enabled.
+
+> :warning: **The stable version of kubectl-exec is a small bash script that you can find in this repository. kubectl-exec is now rewritten in Go which has better performance and error handling. It should work the same way (and we'll keep the bash-based implementation around), but we will add new features also to the new Go program. Please help us test this new Go implementation by downloading the binaries from https://github.com/mohatb/kubego.**
 
 # How it works ?
 
