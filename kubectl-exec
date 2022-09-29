@@ -41,6 +41,7 @@ usage()
         echo "kubectl-exec minikube"
         echo "kubectl-exec -mount"
         echo "kubectl-exec -mount node1"
+        echo "kubectl-exec -filemanager"
         echo " "
         exit 0
 }
@@ -54,7 +55,7 @@ LINUXNODES () {
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
 
-    #nsenter JSON overrrides
+    #exec JSON overrrides
     OVERRIDES="$(cat <<EOT
 {
   "spec": {
@@ -69,11 +70,11 @@ LINUXNODES () {
           }
         },
         "image": "$IMAGE",
-        "name": "nsenter",
+        "name": "exec",
         "stdin": true,
         "stdinOnce": true,
         "tty": true,
-        "command": [ "nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "bash", "-l" ]
+        "command": [ "exec", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "bash", "-l" ]
       }
     ]
   }
@@ -102,7 +103,7 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
     kubectl get nodes "$NODE" -o wide >/dev/null || exit 1
     WINNODEIP=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
 
-    #nsenter JSON overrrides
+    #exec JSON overrrides
     OVERRIDES="$(cat <<EOT
 {
   "spec": {
@@ -119,7 +120,7 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
           }
         },
         "image": "$IMAGE",
-        "name": "nsenter",
+        "name": "exec",
         "stdin": true,
         "stdinOnce": true,
         "tty": true,
@@ -165,7 +166,7 @@ LINUXHOSTMOUNT () {
           }
         },
         "image": "$IMAGE",
-        "name": "nsenter",
+        "name": "exec",
         "stdin": true,
         "stdinOnce": true,
         "tty": true,
@@ -197,6 +198,67 @@ fi
 
 }
 
+
+EXECFILEMANAGER () {
+
+    IMAGE="mohatb/filemanager:latest"
+    POD="$NODE-host-filemanager"
+
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
+
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+      "containers": [
+          {
+              "nodeName": "$NODE",
+              "image": "$IMAGE",
+              "imagePullPolicy": "Always",
+              "name": "filemanager",
+              "resources": {},
+              "securityContext": {
+                "privileged": true,
+                "capabilities": {
+                    "add": [ "SYS_PTRACE" ]
+                }
+                },
+              "volumeMounts": [
+                  {
+                      "mountPath": "/var/www/filegator/repository",
+                      "name": "host-root"
+                  }
+              ]
+          }
+      ],
+      "volumes": [
+          {
+              "hostPath": {
+                  "path": "/",
+                  "type": ""
+              },
+              "name": "host-root"
+          }
+      ]
+  }
+}
+
+EOT
+)"
+
+echo "creating host pod \"$POD\" on node \"$NODE\""
+echo "access filemanager on kubectl-proxy"
+echo "kubectl port-forward $POD 8002:80"
+echo ""
+
+if [ $use_generator = true ]
+then
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 "$POD"
+else
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" "$POD"
+fi
+
+}
 
 #check if user is looking for documentation with -h
 if [ "$1" = "-h" ]
@@ -239,6 +301,27 @@ if [ "$1" = "-mount" ] && [ -n "$2" ]; then
         read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenumber[NODE_INDEX]}
         LINUXHOSTMOUNT
+        exit 1
+fi
+
+#Statement to check if user is looking to mount root file system in linux nodes to the pod.
+if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
+#Check if the user provided node number
+       NODE="$2"
+       EXECFILEMANAGER
+       exit 1
+
+  elif [ "$1" = "-filemanager" ] && [ -z "$2" ]; then
+#If the user did not provide a node number, use interactive to get it.
+		mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
+
+        for i in "${!nodenumber[@]}"; do
+          printf "$i ${nodenumber[i]} \n"
+        done
+        
+        read -p "Enter the node number: " NODE_INDEX
+        NODE=${nodenumber[NODE_INDEX]}
+        EXECFILEMANAGER
         exit 1
 fi
 
