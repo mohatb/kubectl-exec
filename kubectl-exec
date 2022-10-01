@@ -32,15 +32,20 @@ usage()
         echo " "
         echo 'Non-Interactive'
         echo '$ kubectl-exec NODE'
-        echo " "
-        echo "Create a mount pod that can be used to transfer data between node and local"
-        echo "./kubectl-exec -mount"
-        echo " "
+        echo ""
         echo "Examples:"
+        echo ""
+        echo "Access node shell:"
         echo "kubectl-exec"
         echo "kubectl-exec minikube"
+        echo ""
+        echo "Mount The host filesystem to priviliged pod"
         echo "kubectl-exec -mount"
         echo "kubectl-exec -mount node1"
+        echo ""
+        echo "Access node filesystem with web interface in the browser:"
+        echo "kubectl-exec -filemanager"
+        echo "kubectl-exec -filemanager node1"
         echo " "
         exit 0
 }
@@ -198,6 +203,83 @@ fi
 }
 
 
+#Function for -filemanager browser
+
+EXECFILEMANAGER () {
+
+    IMAGE="mohatb/filemanager:latest"
+    POD="$NODE-host-filemanager"
+
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
+
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+      "containers": [
+          {
+              "nodeName": "$NODE",
+              "image": "$IMAGE",
+              "imagePullPolicy": "Always",
+              "name": "filemanager",
+              "resources": {},
+              "securityContext": {
+                "privileged": true,
+                "capabilities": {
+                    "add": [ "SYS_PTRACE" ]
+                }
+                },
+              "volumeMounts": [
+                  {
+                      "mountPath": "/srv",
+                      "name": "host-root"
+                  }
+              ]
+          }
+      ],
+      "volumes": [
+          {
+              "hostPath": {
+                  "path": "/",
+                  "type": ""
+              },
+              "name": "host-root"
+          }
+      ]
+  }
+}
+
+EOT
+)"
+
+echo "creating host pod \"$POD\" on node \"$NODE\""
+echo "access filemanager on kubectl-proxy"
+echo "kubectl port-forward $POD 8002:80"
+echo ""
+echo ""
+echo -e "Creating filemanager pod ${BLUE}\"$POD\"${NC} on node ${BLUE}\"$NODE\"${NC}"
+echo ""
+echo "Run the below port-farward command to access the filemanager in your browser"
+echo ""
+echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
+echo ""
+echo -e "${BLUE}Go to http://127.0.0.1:8002${NC}"
+
+if [ $use_generator = true ]
+then
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 "$POD"
+else
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" "$POD"
+fi
+
+}
+
+#Colors for echo command
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+Green='\033[0;32m'
+NC='\033[0m'
+
 #check if user is looking for documentation with -h
 if [ "$1" = "-h" ]
 then
@@ -239,6 +321,27 @@ if [ "$1" = "-mount" ] && [ -n "$2" ]; then
         read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenumber[NODE_INDEX]}
         LINUXHOSTMOUNT
+        exit 1
+fi
+
+#Statement to check if user is looking to mount root file system in linux nodes to the pod.
+if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
+#Check if the user provided node number
+       NODE="$2"
+       EXECFILEMANAGER
+       exit 1
+
+  elif [ "$1" = "-filemanager" ] && [ -z "$2" ]; then
+#If the user did not provide a node number, use interactive to get it.
+		mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
+
+        for i in "${!nodenumber[@]}"; do
+          printf "$i ${nodenumber[i]} \n"
+        done
+        
+        read -p "Enter the node number: " NODE_INDEX
+        NODE=${nodenumber[NODE_INDEX]}
+        EXECFILEMANAGER
         exit 1
 fi
 
