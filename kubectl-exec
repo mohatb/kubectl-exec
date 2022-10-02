@@ -328,10 +328,70 @@ fi
 
 }
 
+#Function to start filemanager with -filemanager flag on windows nodes.
 EXECFILEMANAGERWINDOWS() {
   
-  echo "windows EXECFILEMANAGERWINDOWS function "
-  echo "$NODE"
+    IMAGE="mohatb/filemanager:withcifs"
+    POD="$NODE-host-filemanager"
+
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
+    read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
+    read -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    WINDOWSIPADDRESS=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+    "nodeSelector": {
+      "kubernetes.io/os": "linux"
+    },
+      "containers": [
+          {
+              "image": "$IMAGE",
+              "imagePullPolicy": "Always",
+              "command": [
+                "/bin/sh",
+                "-c"
+              ],
+              "args": [
+                "mkdir -p /srv/winsows_share/c ; mount -t cifs -o username=$WINDOWSSSHUSERNAME,password=$WINDOWSSSHPASSWORD //$WINDOWSIPADDRESS/c$ /srv/winsows_share/c ; ./filebrowser"
+              ],
+              "name": "filemanager",
+              "resources": {},
+              "securityContext": {
+                "privileged": true,
+                "capabilities": {
+                    "add": [ "SYS_PTRACE" ]
+                }
+              }
+          }
+      ]
+  }
+}
+
+EOT
+)"
+
+echo "access filemanager on kubectl-proxy"
+echo "kubectl port-forward $POD 8002:80"
+echo ""
+echo ""
+echo -e "Creating filemanager pod ${BLUE}\"$POD\"${NC} on node ${BLUE}\"$NODE\"${NC}"
+echo ""
+echo "Run the below port-farward command to access the filemanager in your browser"
+echo ""
+echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
+echo ""
+echo -e "${BLUE}Go to http://127.0.0.1:8002${NC}"
+
+if [ $use_generator = true ]
+then
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 "$POD"
+else
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" "$POD"
+fi
+
 }
 
 
