@@ -182,6 +182,7 @@ LINUXHOSTMOUNT () {
 EOT
 )"
 
+
 echo "creating host pod \"$POD\" on node \"$NODE\""
 echo ""
 echo "You can copy data between your local machine and the node with the below examples:"
@@ -202,10 +203,63 @@ fi
 
 }
 
+# winsows -mount function
+WINDOWSHOSTMOUNT () {
+    IMAGE="mohatb/mountcifs"
+    POD="$NODE-host-filemanager"
 
-#Function for -filemanager browser
+    # Check the node existance
+    kubectl get node "$NODE" >/dev/null || exit 1
+    read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
+    read -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    WINDOWSIPADDRESS=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+    
+    OVERRIDES="$(cat <<EOT
+{
+  "spec": {
+    "nodeSelector": {
+      "kubernetes.io/os": "linux"
+    },
+    "containers": [
+      {
+        "securityContext": {
+          "privileged": true,
+          "capabilities": {
+               "add": [ "SYS_PTRACE" ]
+          }
+        },
+        "image": "$IMAGE",
+        "imagePullPolicy": "Always",
+        "command": [
+          "/bin/sh",
+          "-c"
+        ],
+        "args": [
+          "mkdir -p /mnt/winsows_share/c ; mount -t cifs -o username=$WINDOWSSSHUSERNAME,password=$WINDOWSSSHPASSWORD //$WINDOWSIPADDRESS/c$ /mnt/winsows_share/c ; sleep infinity"
+        ],
+        "name": "mount"
+      }
+    ]
+  }
+}
 
-EXECFILEMANAGER () {
+EOT
+)"
+
+echo "creating host pod \"$POD\" on node \"$NODE\""
+
+
+if [ $use_generator = true ]
+then
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" --generator=run-pod/v1 "$POD"
+else
+        kubectl run --image $IMAGE --overrides="$OVERRIDES" "$POD"
+fi
+}
+
+#Function for -filemanager browser on Linux
+
+EXECFILEMANAGERLINUX () {
 
     IMAGE="mohatb/filemanager:latest"
     POD="$NODE-host-filemanager"
@@ -274,11 +328,23 @@ fi
 
 }
 
+EXECFILEMANAGERWINDOWS() {
+  
+  echo "windows EXECFILEMANAGERWINDOWS function "
+  echo "$NODE"
+}
+
+
+##########################################################################
+#Exection Start
+##########################################################################
+
 #Colors for echo command
 RED='\033[0;31m'
 BLUE='\033[0;34m'
 Green='\033[0;32m'
 NC='\033[0m'
+
 
 #check if user is looking for documentation with -h
 if [ "$1" = "-h" ]
@@ -307,9 +373,16 @@ if [ -z "$1" ]; then
 if [ "$1" = "-mount" ] && [ -n "$2" ]; then
 #Check if the user provided node number
        NODE="$2"
-       LINUXHOSTMOUNT
-       exit 1
-
+       NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+          if [[ $NODEOS = "windows" ]]
+          then
+              WINDOWSHOSTMOUNT
+              exit 1
+          else
+              LINUXHOSTMOUNT
+              exit 1
+          fi
+        exit 1
   elif [ "$1" = "-mount" ] && [ -z "$2" ]; then
 #If the user did not provide a node number, use interactive to get it.
 		mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
@@ -320,7 +393,15 @@ if [ "$1" = "-mount" ] && [ -n "$2" ]; then
         
         read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenumber[NODE_INDEX]}
-        LINUXHOSTMOUNT
+        NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+        if [[ $NODEOS = "windows" ]]
+          then
+              WINDOWSHOSTMOUNT
+              exit 1
+          else
+              LINUXHOSTMOUNT
+              exit 1
+        fi
         exit 1
 fi
 
@@ -328,20 +409,34 @@ fi
 if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
 #Check if the user provided node number
        NODE="$2"
-       EXECFILEMANAGER
-       exit 1
-
-  elif [ "$1" = "-filemanager" ] && [ -z "$2" ]; then
+       NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+          if [[ $NODEOS = "windows" ]]
+          then
+              EXECFILEMANAGERWINDOWS
+              exit 1
+          else
+              EXECFILEMANAGERLINUX
+              exit 1
+          fi
+        exit 1
 #If the user did not provide a node number, use interactive to get it.
-		mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
-
-        for i in "${!nodenumber[@]}"; do
-          printf "$i ${nodenumber[i]} \n"
+  elif [ "$1" = "-filemanager" ] && [ -z "$2" ]; then
+		mapfile -t nodenum < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
+        for i in "${!nodenum[@]}"; do
+          printf "$i ${nodenum[i]} \n"
         done
         
         read -p "Enter the node number: " NODE_INDEX
-        NODE=${nodenumber[NODE_INDEX]}
-        EXECFILEMANAGER
+        NODE=${nodenum[NODE_INDEX]}
+        NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+        if [[ $NODEOS = "windows" ]]
+          then
+              EXECFILEMANAGERWINDOWS
+              exit 1
+          else
+              EXECFILEMANAGERLINUX
+              exit 1
+        fi
         exit 1
 fi
 
