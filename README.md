@@ -25,7 +25,7 @@ Kubectl-exec is an interactive bash script that allows you to perform tasks on W
 
 ![Non-Interavtive](./resources/img/mount-windows.gif)
 
-- Expose a web based file manager for managing files and folders and transfer data from your local machine.
+- Expose a web based file manager for managing files and folders and transfer data between nodes and your local machine.
 
 ![Non-Interavtive](./resources/img/filemanager.gif)
 
