@@ -70,7 +70,7 @@ Non-Interactive:
 Examples:
     Access node shell:
     kubectl-exec
-    kubectl-exec minikube
+    kubectl-exec NodeName
     
     Mount The host filesystem to priviliged pod:
     kubectl-exec -mount
