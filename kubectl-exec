@@ -211,7 +211,8 @@ WINDOWSHOSTMOUNT () {
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
     read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
-    read -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    read -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    echo ""
     WINDOWSIPADDRESS=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
     
     OVERRIDES="$(cat <<EOT
@@ -247,6 +248,15 @@ EOT
 )"
 
 echo "creating host pod \"$POD\" on node \"$NODE\""
+echo ""
+echo "You can copy data between your local machine and the node with the below examples:"
+echo ""
+echo "From Local -> Node:"
+echo "kubectl cp /etc/hostname default/$POD:/mnt/winsows_share/c/tmp/hostname.txt"
+echo ""
+echo "From Node -> Local"
+echo "kubectl cp default/$POD:/mnt/winsows_share/c/Windows/System32/drivers/etc/hosts /tmp/hosts"
+echo ""
 
 
 if [ $use_generator = true ]
@@ -337,7 +347,7 @@ EXECFILEMANAGERWINDOWS() {
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
     read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
-    read -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    read -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
     WINDOWSIPADDRESS=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
 
     OVERRIDES="$(cat <<EOT
