@@ -52,12 +52,17 @@ https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_i
 ## Installation:
 ```
 wget https://github.com/mohatb/kubectl-exec/raw/master/kubectl-exec
-
 chmod +x ./kubectl-exec
-
 sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 ```
 
+## Updating:
+```
+sudo rm -rf $(which kubectl-exec)
+wget https://github.com/mohatb/kubectl-exec/raw/master/kubectl-exec
+chmod +x ./kubectl-exec
+sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
+```
 
 ## Usage:
 ```
