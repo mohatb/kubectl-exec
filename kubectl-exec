@@ -327,7 +327,7 @@ echo "Run the below port-farward command to access the filemanager in your brows
 echo ""
 echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
 echo ""
-echo -e "${BLUE}Go to http://127.0.0.1:8002${NC}"
+echo -e "> ${BLUE}Go to http://127.0.0.1:8002${NC}"
 
 if [ $use_generator = true ]
 then
@@ -393,7 +393,7 @@ echo "Run the below port-farward command to access the filemanager in your brows
 echo ""
 echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
 echo ""
-echo -e "${BLUE}Go to http://127.0.0.1:8002${NC}"
+echo -e "> ${BLUE}Go to http://127.0.0.1:8002${NC}"
 
 if [ $use_generator = true ]
 then
