@@ -99,8 +99,10 @@ fi
 WINDOWSNODES () {
 
 echo "SSH into windows VM"
-read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
-    IMAGE="alpine"
+read -p "Enter your windows node ssh user: " WINDOWSSSHUSER
+read -s -p "Enter your windows ssh password: " WINDOWSSSHPASSWORD
+
+    IMAGE="mohatb/alpine:latest"
     POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
 
     # Check the node existance and IP
@@ -111,10 +113,9 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
     OVERRIDES="$(cat <<EOT
 {
   "spec": {
-    "hostPID": true,
     "nodeSelector": {
       "kubernetes.io/os": "linux"
-      },
+    },
     "containers": [
       {
         "securityContext": {
@@ -124,11 +125,18 @@ read -p "Enter the windows node ssh user: " WINDOWSSSHUSER
           }
         },
         "image": "$IMAGE",
-        "name": "nsenter",
+        "imagePullPolicy": "Always",
+        "command": [
+          "/bin/sh",
+          "-c"
+        ],
+        "args": [
+          "sshpass -p $WINDOWSSSHPASSWORD ssh -o StrictHostKeyChecking=no $WINDOWSSSHUSER@$WINNODEIP"
+        ],
+        "name": "ssh",
         "stdin": true,
         "stdinOnce": true,
-        "tty": true,
-        "command": [ "nsenter", "--target", "1", "--mount", "--uts", "--ipc", "--net", "--pid", "--", "ssh", "-o", "StrictHostKeyChecking=no", "$WINDOWSSSHUSER@$WINNODEIP" ]
+        "tty": true
       }
     ]
   }
@@ -203,7 +211,7 @@ fi
 
 }
 
-# winsows -mount function
+# Windows -mount function
 WINDOWSHOSTMOUNT () {
     IMAGE="mohatb/mountcifs"
     POD="$NODE-host-filemanager"
@@ -236,7 +244,7 @@ WINDOWSHOSTMOUNT () {
           "-c"
         ],
         "args": [
-          "mkdir -p /mnt/winsows_share/c ; mount -t cifs -o username=$WINDOWSSSHUSERNAME,password=$WINDOWSSSHPASSWORD //$WINDOWSIPADDRESS/c$ /mnt/winsows_share/c ; sleep infinity"
+          "mkdir -p /mnt/windows_share/c ; mount -t cifs -o username=$WINDOWSSSHUSERNAME,password=$WINDOWSSSHPASSWORD //$WINDOWSIPADDRESS/c$ /mnt/windows_share/c ; sleep infinity"
         ],
         "name": "mount"
       }
@@ -255,7 +263,7 @@ echo "From Local -> Node:"
 echo "kubectl cp /etc/hostname default/$POD:/mnt/winsows_share/c/tmp/hostname.txt"
 echo ""
 echo "From Node -> Local"
-echo "kubectl cp default/$POD:/mnt/winsows_share/c/Windows/System32/drivers/etc/hosts /tmp/hosts"
+echo "kubectl cp default/$POD:/mnt/windows_share/c/Windows/System32/drivers/etc/hosts /tmp/hosts"
 echo ""
 
 
@@ -327,7 +335,7 @@ echo "Run the below port-farward command to access the filemanager in your brows
 echo ""
 echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
 echo ""
-echo -e "> ${BLUE}Go to http://127.0.0.1:8002${NC}"
+echo -e "${BLUE}Go to http://127.0.0.1:8002${NC}"
 
 if [ $use_generator = true ]
 then
@@ -393,7 +401,7 @@ echo "Run the below port-farward command to access the filemanager in your brows
 echo ""
 echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
 echo ""
-echo -e "> ${BLUE}Go to http://127.0.0.1:8002${NC}"
+echo -e "${BLUE}Go to http://127.0.0.1:8002${NC}"
 
 if [ $use_generator = true ]
 then
