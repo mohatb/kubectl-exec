@@ -50,14 +50,14 @@ https://docs.microsoft.com/en-us/windows-server/administration/openssh/openssh_i
 <br>
 
 ## Installation:
-```
+```bash
 wget https://github.com/mohatb/kubectl-exec/raw/master/kubectl-exec
 chmod +x ./kubectl-exec
 sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 ```
 
 ## Updating:
-```
+```bash
 sudo rm -rf $(which kubectl-exec)
 wget https://github.com/mohatb/kubectl-exec/raw/master/kubectl-exec
 chmod +x ./kubectl-exec
@@ -65,7 +65,7 @@ sudo mv ./kubectl-exec /usr/local/bin/kubectl-exec
 ```
 
 ## Usage:
-```
+```bash
 Interactive:
     kubectl-exec
     
@@ -85,6 +85,10 @@ Examples:
     kubectl-exec -filemanager
     kubectl-exec -filemanager NodeName
 ```
+<br>
+
+# Troubleshooting:
+Please refer to troubleshooting section [Troubleshooting](Troubleshooting.md)<br><br>
 
 # Contributing
 We welcome pull requests with open arms! There's a lot of work to do here, and we're especially concerned with ensuring the longevity and reliability of the project.
