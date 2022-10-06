@@ -281,6 +281,7 @@ EXECFILEMANAGERLINUX () {
 
     IMAGE="mohatb/filemanager:latest"
     POD="$NODE-host-filemanager"
+    echo "$NODE"
 
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
@@ -290,7 +291,6 @@ EXECFILEMANAGERLINUX () {
   "spec": {
       "containers": [
           {
-              "nodeName": "$NODE",
               "image": "$IMAGE",
               "imagePullPolicy": "Always",
               "name": "filemanager",
@@ -309,6 +309,7 @@ EXECFILEMANAGERLINUX () {
               ]
           }
       ],
+      "nodeName": "$NODE",
       "volumes": [
           {
               "hostPath": {
@@ -324,18 +325,15 @@ EXECFILEMANAGERLINUX () {
 EOT
 )"
 
-echo "creating host pod \"$POD\" on node \"$NODE\""
-echo "access filemanager on kubectl-proxy"
-echo "kubectl port-forward $POD 8002:80"
 echo ""
+echo -e "Creating filemanager pod ${BLUE}\"$POD\"${NC} for node ${BLUE}\"$NODE\"${NC}"
 echo ""
-echo -e "Creating filemanager pod ${BLUE}\"$POD\"${NC} on node ${BLUE}\"$NODE\"${NC}"
-echo ""
-echo "Run the below port-farward command to access the filemanager in your browser"
-echo ""
+echo "Run the below port-forward command to establish a proxy connection to the filemanager pod"
 echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
 echo ""
-echo -e "> ${BLUE}Go to http://127.0.0.1:8002${NC}"
+echo "Open your browser and go to the below URL"
+echo -e "> ${BLUE}http://127.0.0.1:8002${NC}"
+echo ""
 
 if [ $use_generator = true ]
 then
@@ -391,17 +389,15 @@ EXECFILEMANAGERWINDOWS() {
 EOT
 )"
 
-echo "access filemanager on kubectl-proxy"
-echo "kubectl port-forward $POD 8002:80"
 echo ""
+echo -e "Creating filemanager pod ${BLUE}\"$POD\"${NC} for node ${BLUE}\"$NODE\"${NC}"
 echo ""
-echo -e "Creating filemanager pod ${BLUE}\"$POD\"${NC} on node ${BLUE}\"$NODE\"${NC}"
-echo ""
-echo "Run the below port-farward command to access the filemanager in your browser"
-echo ""
+echo "Run the below port-forward command to establish a proxy connection to the filemanager pod"
 echo -e "> ${BLUE}kubectl port-forward $POD 8002:80${NC}"
 echo ""
-echo -e "> ${BLUE}Go to http://127.0.0.1:8002${NC}"
+echo "Open your browser and go to the below URL"
+echo -e "> ${BLUE}http://127.0.0.1:8002${NC}"
+echo ""
 
 if [ $use_generator = true ]
 then
