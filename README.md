@@ -94,6 +94,11 @@ Please refer to troubleshooting section [Troubleshooting](Troubleshooting.md)<br
 We welcome pull requests with open arms! There's a lot of work to do here, and we're especially concerned with ensuring the longevity and reliability of the project.
 <br><br>
 
+## Contributors
+
+<a href="https://github.com/mohatb/kubectl-exec/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=mohatb/kubectl-exec" />
+</a>
 
 # License
 
