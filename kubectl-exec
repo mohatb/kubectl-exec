@@ -14,11 +14,11 @@ kubectl_minor_version=$(kubectl version --client -o yaml | grep -i "minor" | awk
 if [[ $kubectl_major_version -gt 1 ]] || [[ $kubectl_major_version -eq 1 && $kubectl_minor_version -ge 18 ]]
 then
         use_generator=false
-        echo "Kuberetes client version is $kubectl_major_version.$kubectl_minor_version. Generator will not be used since it is deprecated."
+        echo "Kubernetes client version is $kubectl_major_version.$kubectl_minor_version. Generator will not be used since it is deprecated."
 elif [[ $kubectl_major_version -eq 1 && $kubectl_minor_version -lt 18 ]]
 then
         use_generator=true
-        echo "Kuberetes client version is $kubectl_major_version.$kubectl_minor_version. Generator will be used."
+        echo "Kubernetes client version is $kubectl_major_version.$kubectl_minor_version. Generator will be used."
 else
         echo "Invalid kubectl version, exiting."
         exit 1
@@ -39,7 +39,7 @@ usage()
         echo "kubectl-exec"
         echo "kubectl-exec minikube"
         echo ""
-        echo "Mount The host filesystem to priviliged pod"
+        echo "Mount The host filesystem to privileged pod"
         echo "kubectl-exec -mount"
         echo "kubectl-exec -mount node1"
         echo ""
@@ -56,7 +56,7 @@ LINUXNODES () {
     IMAGE="alpine"
     POD="$NODE-exec-$(echo $RANDOM)"
 
-    # Check the node existance
+    # Check the node existence
     kubectl get node "$NODE" >/dev/null || exit 1
 
     #nsenter JSON overrrides
@@ -105,7 +105,7 @@ read -s -p "Enter your windows ssh password: " WINDOWSSSHPASSWORD
     IMAGE="mohatb/alpine:latest"
     POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
 
-    # Check the node existance and IP
+    # Check the node existence and IP
     kubectl get nodes "$NODE" -o wide >/dev/null || exit 1
     WINNODEIP=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
 
@@ -161,7 +161,7 @@ LINUXHOSTMOUNT () {
     IMAGE="alpine"
     POD="$NODE-hostpath-mount"
 
-    # Check the node existance
+    # Check the node existence
     kubectl get node "$NODE" >/dev/null || exit 1
 
     OVERRIDES="$(cat <<EOT
@@ -216,7 +216,7 @@ WINDOWSHOSTMOUNT () {
     IMAGE="mohatb/mountcifs"
     POD="$NODE-host-filemanager"
 
-    # Check the node existance
+    # Check the node existence
     kubectl get node "$NODE" >/dev/null || exit 1
     read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
     read -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
@@ -260,7 +260,7 @@ echo ""
 echo "You can copy data between your local machine and the node with the below examples:"
 echo ""
 echo "From Local -> Node:"
-echo "kubectl cp /etc/hostname default/$POD:/mnt/winsows_share/c/tmp/hostname.txt"
+echo "kubectl cp /etc/hostname default/$POD:/mnt/windows_share/c/tmp/hostname.txt"
 echo ""
 echo "From Node -> Local"
 echo "kubectl cp default/$POD:/mnt/windows_share/c/Windows/System32/drivers/etc/hosts /tmp/hosts"
@@ -283,7 +283,7 @@ EXECFILEMANAGERLINUX () {
     POD="$NODE-host-filemanager"
     echo "$NODE"
 
-    # Check the node existance
+    # Check the node existence
     kubectl get node "$NODE" >/dev/null || exit 1
 
     OVERRIDES="$(cat <<EOT
@@ -350,7 +350,7 @@ EXECFILEMANAGERWINDOWS() {
     IMAGE="mohatb/filemanager:withcifs"
     POD="$NODE-host-filemanager"
 
-    # Check the node existance
+    # Check the node existence
     kubectl get node "$NODE" >/dev/null || exit 1
     read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
     read -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
@@ -371,7 +371,7 @@ EXECFILEMANAGERWINDOWS() {
                 "-c"
               ],
               "args": [
-                "mkdir -p /srv/winsows_share/c ; mount -t cifs -o username=$WINDOWSSSHUSERNAME,password=$WINDOWSSSHPASSWORD //$WINDOWSIPADDRESS/c$ /srv/winsows_share/c ; ./filebrowser"
+                "mkdir -p /srv/windows_share/c ; mount -t cifs -o username=$WINDOWSSSHUSERNAME,password=$WINDOWSSSHPASSWORD //$WINDOWSIPADDRESS/c$ /srv/windows_share/c ; ./filebrowser"
               ],
               "name": "filemanager",
               "resources": {},

@@ -15,25 +15,25 @@ Kubectl-exec is an interactive bash script that allows you to perform tasks on W
 
 - Access Windows/Linux nodes shell interactively<br>
 
-![Interavtive](./resources/img/interactive.gif)
+![Interactive](./resources/img/interactive.gif)
 
 - Access Windows/Linux nodes shell non-interactively
 
-![Non-Interavtive](./resources/img/non-interactive.gif)
+![Non-Interactive](./resources/img/non-interactive.gif)
 
 - Mount Windows/Linux filesystem to pod, can be used to explore or transfer files.
 
-![Non-Interavtive](./resources/img/mount-windows.gif)
+![Non-Interactive](./resources/img/mount-windows.gif)
 
 - Expose a web based file manager for managing files and folders and transfer data between nodes and your local machine.
 
-![Non-Interavtive](./resources/img/filemanager.gif)
+![Non-Interactive](./resources/img/filemanager.gif)
 
 
 
 # How it works:
 
-**For Linux:** <br>It works by creating a pod (with a priviledged container) in the node you specified and using nsenter for getting a shell into your kuberntes nodes.
+**For Linux:** <br>It works by creating a pod (with a privileged container) in the node you specified and using nsenter for getting a shell into your kubernetes nodes.
 
 The created pod is from alpine official image which is ~2.6 mb in size, once you exit the shell, the pod will be deleted.<br>
 
@@ -77,7 +77,7 @@ Examples:
     kubectl-exec
     kubectl-exec NodeName
     
-    Mount The host filesystem to priviliged pod:
+    Mount The host filesystem to privileged pod:
     kubectl-exec -mount
     kubectl-exec -mount NodeName
 
