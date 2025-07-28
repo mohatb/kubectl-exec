@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-set -euo pipefail
 
 #Check kubectl client exists
 if ! command -v kubectl &> /dev/null
@@ -55,7 +54,7 @@ usage()
 LINUXNODES () {
 
     IMAGE="alpine"
-    POD="${NODE}-exec-${RANDOM}"
+    POD="$NODE-exec-$(echo $RANDOM)"
 
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
@@ -100,15 +99,15 @@ fi
 WINDOWSNODES () {
 
 echo "SSH into windows VM"
-read -r -p "Enter your windows node ssh user: " WINDOWSSSHUSER
-read -r -s -p "Enter your windows ssh password: " WINDOWSSSHPASSWORD
+read -p "Enter your windows node ssh user: " WINDOWSSSHUSER
+read -s -p "Enter your windows ssh password: " WINDOWSSSHPASSWORD
 
     IMAGE="mohatb/alpine:latest"
     POD="$NODE-exec-$(env LC_CTYPE=C tr -dc a-z0-9 < /dev/urandom | head -c 6)"
 
     # Check the node existance and IP
     kubectl get nodes "$NODE" -o wide >/dev/null || exit 1
-    WINNODEIP=$(kubectl get node "$NODE" --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+    WINNODEIP=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
 
     #nsenter JSON overrrides
     OVERRIDES="$(cat <<EOT
@@ -219,10 +218,10 @@ WINDOWSHOSTMOUNT () {
 
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
-    read -r -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
-    read -r -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
+    read -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
     echo ""
-    WINDOWSIPADDRESS=$(kubectl get node "$NODE" --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+    WINDOWSIPADDRESS=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
     
     OVERRIDES="$(cat <<EOT
 {
@@ -353,9 +352,9 @@ EXECFILEMANAGERWINDOWS() {
 
     # Check the node existance
     kubectl get node "$NODE" >/dev/null || exit 1
-    read -r -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
-    read -r -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
-    WINDOWSIPADDRESS=$(kubectl get node "$NODE" --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
+    read -p "Enter the windows ssh username: " WINDOWSSSHUSERNAME
+    read -s -p "Enter the windows ssh password: " WINDOWSSSHPASSWORD
+    WINDOWSIPADDRESS=$(kubectl get node $NODE --output=jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}')
 
     OVERRIDES="$(cat <<EOT
 {
@@ -417,6 +416,7 @@ fi
 #Colors for echo command
 RED='\033[0;31m'
 BLUE='\033[0;34m'
+Green='\033[0;32m'
 NC='\033[0m'
 
 
@@ -424,6 +424,7 @@ NC='\033[0m'
 if [ "$1" = "-h" ]
 then
         usage
+        exit 1
 fi
 
 #Check user input for shell access
@@ -435,7 +436,7 @@ if [ -z "$1" ]; then
           printf "$i ${nodenumber[i]} \n"
         done
         
-        read -r -p "Enter the node number: " NODE_INDEX
+        read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenumber[NODE_INDEX]}
 
     else
@@ -446,7 +447,7 @@ if [ -z "$1" ]; then
 if [ "$1" = "-mount" ] && [ -n "$2" ]; then
 #Check if the user provided node number
        NODE="$2"
-       NODEOS=$(kubectl get node "$NODE" -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+       NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
           if [[ $NODEOS = "windows" ]]
           then
               WINDOWSHOSTMOUNT
@@ -455,6 +456,7 @@ if [ "$1" = "-mount" ] && [ -n "$2" ]; then
               LINUXHOSTMOUNT
               exit 1
           fi
+        exit 1
   elif [ "$1" = "-mount" ] && [ -z "$2" ]; then
 #If the user did not provide a node number, use interactive to get it.
 		mapfile -t nodenumber < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
@@ -463,9 +465,9 @@ if [ "$1" = "-mount" ] && [ -n "$2" ]; then
           printf "$i ${nodenumber[i]} \n"
         done
         
-        read -r -p "Enter the node number: " NODE_INDEX
+        read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenumber[NODE_INDEX]}
-        NODEOS=$(kubectl get node "$NODE" -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+        NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
         if [[ $NODEOS = "windows" ]]
           then
               WINDOWSHOSTMOUNT
@@ -474,13 +476,14 @@ if [ "$1" = "-mount" ] && [ -n "$2" ]; then
               LINUXHOSTMOUNT
               exit 1
         fi
+        exit 1
 fi
 
 #Statement to check if user is looking to mount root file system in linux nodes to the pod.
 if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
 #Check if the user provided node number
        NODE="$2"
-       NODEOS=$(kubectl get node "$NODE" -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+       NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
           if [[ $NODEOS = "windows" ]]
           then
               EXECFILEMANAGERWINDOWS
@@ -489,6 +492,7 @@ if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
               EXECFILEMANAGERLINUX
               exit 1
           fi
+        exit 1
 #If the user did not provide a node number, use interactive to get it.
   elif [ "$1" = "-filemanager" ] && [ -z "$2" ]; then
 		mapfile -t nodenum < <( kubectl get nodes --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}' )
@@ -496,9 +500,9 @@ if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
           printf "$i ${nodenum[i]} \n"
         done
         
-        read -r -p "Enter the node number: " NODE_INDEX
+        read -p "Enter the node number: " NODE_INDEX
         NODE=${nodenum[NODE_INDEX]}
-        NODEOS=$(kubectl get node "$NODE" -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+        NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
         if [[ $NODEOS = "windows" ]]
           then
               EXECFILEMANAGERWINDOWS
@@ -507,10 +511,11 @@ if [ "$1" = "-filemanager" ] && [ -n "$2" ]; then
               EXECFILEMANAGERLINUX
               exit 1
         fi
+        exit 1
 fi
 
 #Evaluate if windows node.
-NODEOS=$(kubectl get node "$NODE" -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
+NODEOS=$(kubectl get node $NODE -o jsonpath="{.metadata.labels.\kubernetes\.io/os}")
 
 if [[ $NODEOS = "windows" ]]
 then
